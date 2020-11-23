@@ -1,0 +1,11 @@
+use_frameworks!
+
+target 'MMediaPicker_Example' do
+  pod 'MMediaPicker', :path => '../'
+
+  target 'MMediaPicker_Tests' do
+    inherit! :search_paths
+
+    
+  end
+end

@@ -1,0 +1,29 @@
+/*
+ Localizable.strings
+
+ 
+ Created by Van Trieu Phu Huy on 9/12/17.
+ Copyright © 2017 ePepaperSmart. All rights reserved.
+ */
+
+"Camera Roll" = "Cuộn camera";
+
+"Tap here to change" = "Bấm vào đây để thay đổi";
+
+"Cancel" = "Hủy";
+
+"Done" = "Xong";
+
+"No albums" = "Không có tập ảnh";
+
+"Select" = "Chọn";
+
+"Deselect" = "Bỏ chọn";
+
+"Photo is limited access" = "Hình ảnh đã bị giới hạn";
+
+"You want to reselection ?" = "Bạn có muốn chọn lại không ?";
+
+"Reselect" = "Chọn lại";
+
+

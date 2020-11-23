@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import MMediaPicker
 
 class ViewController: UIViewController {
 
@@ -18,6 +19,16 @@ class ViewController: UIViewController {
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
+    }
+    
+    @IBAction func showPressed() {
+        //, selectedColor: UIColor.red
+        MMediaPicker.shared.present(in: self, maxSelectCount: 100, isOnlySelectPhoto: false, languageEng: false) { (arrayAsset) in
+            print("Completion")
+        } cancel: {
+            print("Cancel")
+        }
+
     }
 
 }

@@ -1,5 +1,5 @@
 PODS:
-  - MMediaPicker (0.1.1)
+  - MMediaPicker (0.1.2)
 
 DEPENDENCIES:
   - MMediaPicker (from `../`)
@@ -9,7 +9,7 @@ EXTERNAL SOURCES:
     :path: "../"
 
 SPEC CHECKSUMS:
-  MMediaPicker: fbee79ed49ba8e78c3e126f12f8a5be1fcadace1
+  MMediaPicker: 75b7a00ff47696184d4615d07267146b27359c60
 
 PODFILE CHECKSUM: 9fade5cbe6db7098b2e258be7f01844dfc4f9d02
 

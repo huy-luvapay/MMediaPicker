@@ -136,12 +136,14 @@ class CustomBlackStylePickerViewController: TLPhotosPickerViewController {
     
     override func updatePresentLimitedLibraryButton() {
         super.updatePresentLimitedLibraryButton()
+        /*
         if #available(iOS 14.0, *), self.photoLibrary.limitMode && self.configure.preventAutomaticLimitedAccessAlert {
             if(self.isShowLimitedAccessAlert) {
                 self.limitButtonTap()
                 self.isShowLimitedAccessAlert = false
             }
         }
+        */
     }
     
     override func makeUI() {

@@ -26,4 +26,21 @@
 
 "Reselect" = "Chọn lại";
 
+"You've given app access to a select number of photo and videos" = "Bạn đã cấp cho ứng dụng quyền truy cập vào một số ảnh và video được chọn";
+
+"Manage" = "Quản lý";
+
+"Cancel" = "Hủy";
+
+"Select more photo" = "Chọn thêm hình ảnh";
+
+"Change settings" = "Thay đổi cài đặt";
+
+"To access all of your photos in app, allow access to your full library in device settings" = "Để truy cập tất cả ảnh của bạn trong ứng dụng, hãy cho phép truy cập vào thư viện đầy đủ của bạn trong cài đặt thiết bị";
+
+"Open setting" = "Mở cài đặt";
+
+"Allow app to access your photos and videos and select them" = "Cho phép ứng dụng truy cập ảnh và video của bạn và chọn chúng";
+
+
 

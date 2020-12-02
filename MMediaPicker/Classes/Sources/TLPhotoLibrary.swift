@@ -22,6 +22,7 @@ class TLPhotoLibrary {
         return PHCachingImageManager()
     }()
     internal var limitMode: Bool = false
+    internal var isRestricted: Bool = false
     internal var assetCollections: [PHFetchResult<PHAssetCollection>] = []
     internal var albums: PHFetchResult<PHCollection>? = nil
     

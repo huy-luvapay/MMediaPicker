@@ -54,6 +54,11 @@ extension TLPhotosPickerLogDelegate {
 public struct TLPhotosPickerConfigure {
     public var customLocalizedTitle: [String: String] = ["Camera Roll".localizedString(): "Camera Roll".localizedString()]
     public var tapHereToChange = "Tap here to change".localizedString()
+    public var manageSetting = "Manage".localizedString()
+    public var descriptionManagePermission = "You've given app access to a select number of photo and videos".localizedString()
+    public var openSetting = "Open setting".localizedString()
+    
+    public var descriptionRetrictedSettingPermission = "Allow app to access your photos and videos and select them".localizedString()
     public var cancelTitle = "Cancel".localizedString()
     public var doneTitle = "Done".localizedString()
     public var emptyMessage = "No albums".localizedString()
@@ -198,6 +203,18 @@ open class TLPhotosPickerViewController: UIViewController {
     private var placeholderThumbnail: UIImage? = nil
     private var cameraImage: UIImage? = nil
     
+    private var isShowManageSetting: Bool {
+        if #available(iOS 14.0, *), self.photoLibrary.limitMode && self.configure.preventAutomaticLimitedAccessAlert {
+            return true
+        }
+        return false
+    }
+    
+    
+    private var isShowOpenSetting: Bool {
+        return self.photoLibrary.isRestricted
+    }
+    
     deinit {
         //print("deinit TLPhotosPickerViewController")
         PHPhotoLibrary.shared().unregisterChangeObserver(self)
@@ -261,7 +278,12 @@ open class TLPhotosPickerViewController: UIViewController {
         self.photoLibrary.fetchCollection(configure: self.configure)
     }
     
+    private func setIsRestricted(isRestricted: Bool) {
+        self.photoLibrary.isRestricted = isRestricted
+    }
+    
     private func processAuthorization(status: PHAuthorizationStatus) {
+        self.setIsRestricted(isRestricted: false)
         switch status {
         case .notDetermined:
             requestAuthorization()
@@ -270,6 +292,7 @@ open class TLPhotosPickerViewController: UIViewController {
         case .authorized:
             loadPhotos(limitMode: false)
         case .restricted, .denied:
+            self.setIsRestricted(isRestricted: true)
             handleDeniedAlbumsAuthorization()
         @unknown default:
             break
@@ -394,6 +417,8 @@ extension TLPhotosPickerViewController {
     }
     
     @objc open func makeUI() {
+        self.collectionView.register(UINib(nibName: "ManageSettingHeaderView", bundle: TLBundle.bundle()), forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: "ManageSettingHeaderView")
+        registerNib(nibName: "TLPhotoCollectionViewCell", bundle: TLBundle.bundle())
         registerNib(nibName: "TLPhotoCollectionViewCell", bundle: TLBundle.bundle())
         if let nibSet = self.configure.nibSet {
             registerNib(nibName: nibSet.nibName, bundle: nibSet.bundle)
@@ -429,9 +454,52 @@ extension TLPhotosPickerViewController {
         self.customDataSouces?.registerSupplementView(collectionView: self.collectionView)
     }
     
+    
+    @objc func settingButtonPressed(sender: UIButton) {
+       
+        if(self.isShowManageSetting) {
+            let alertController = UIAlertController (title: "To access all of your photos in app, allow access to your full library in device settings".localizedString(), message: "", preferredStyle: .actionSheet)
+            let selectMoreAction = UIAlertAction(title: "Select more photo".localizedString(), style: .default) {[weak self] (_) -> Void in
+                self?.limitButtonTap()
+            }
+            alertController.addAction(selectMoreAction)
+            let settingsAction = UIAlertAction(title: "Change settings".localizedString(), style: .default) { (_) -> Void in
+                
+                guard let settingsUrl = URL(string: UIApplication.openSettingsURLString) else {
+                    return
+                }
+                
+                if UIApplication.shared.canOpenURL(settingsUrl) {
+                    UIApplication.shared.open(settingsUrl, completionHandler: { (success) in
+                        print("Settings opened: \(success)") // Prints true
+                    })
+                }
+            }
+            alertController.addAction(settingsAction)
+            
+            let cancelAction = UIAlertAction(title: "Cancel".localizedString(), style: .cancel, handler: nil)
+            alertController.addAction(cancelAction)
+            
+            present(alertController, animated: true, completion: nil)
+        } else {
+            guard let settingsUrl = URL(string: UIApplication.openSettingsURLString) else {
+                return
+            }
+            
+            if UIApplication.shared.canOpenURL(settingsUrl) {
+                UIApplication.shared.open(settingsUrl, completionHandler: { (success) in
+                    print("Settings opened: \(success)") // Prints true
+                })
+            }
+        }
+        
+        
+    }
+    
     @objc public func updatePresentLimitedLibraryButton() {
-        if #available(iOS 14.0, *), self.photoLibrary.limitMode && self.configure.preventAutomaticLimitedAccessAlert {
-            self.customNavItem.rightBarButtonItems = [self.doneButton, self.photosButton]
+        if self.isShowManageSetting {
+            self.customNavItem.rightBarButtonItems = [self.doneButton]
+            //self.customNavItem.rightBarButtonItems = [self.doneButton, self.photosButton]
         } else {
             self.customNavItem.rightBarButtonItems = [self.doneButton]
         }
@@ -1155,11 +1223,36 @@ extension TLPhotosPickerViewController: UICollectionViewDelegate,UICollectionVie
 extension TLPhotosPickerViewController: UICollectionViewDelegateFlowLayout {
     open func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
         guard let identifier = self.customDataSouces?.supplementIdentifier(kind: kind) else {
+            if(self.isShowManageSetting || self.isShowOpenSetting) {
+                switch kind {
+                case UICollectionView.elementKindSectionHeader:
+                    let manageSettingHeaderView = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: "ManageSettingHeaderView", for: indexPath) as! ManageSettingHeaderView
+                    if(self.isShowManageSetting) {
+                        manageSettingHeaderView.textLabel.text = self.configure.descriptionManagePermission
+                        manageSettingHeaderView.settingButton.setTitle(self.configure.manageSetting, for: UIControl.State())
+                    } else {
+                        manageSettingHeaderView.textLabel.text = self.configure.descriptionRetrictedSettingPermission
+                        manageSettingHeaderView.settingButton.setTitle(self.configure.openSetting, for: UIControl.State())
+                    }
+                    
+                    manageSettingHeaderView.settingButton.addTarget(self, action: #selector(self.settingButtonPressed(sender:)), for: .touchUpInside)
+                    if(self.collectionView.backgroundColor == .black) {
+                        manageSettingHeaderView.textLabel.textColor = UIColor.white
+                        manageSettingHeaderView.settingButton.titleLabel?.textColor = UIColor.black
+                        manageSettingHeaderView.settingButton.backgroundColor = UIColor.white
+                    } else {
+                        manageSettingHeaderView.textLabel.textColor = UIColor.black
+                        manageSettingHeaderView.settingButton.titleLabel?.textColor = UIColor.black
+                        manageSettingHeaderView.settingButton.backgroundColor = UIColor.groupTableViewBackground
+                    }
+                    return manageSettingHeaderView
+                default:
+                    break
+                }
+            }
             return UICollectionReusableView()
         }
-        let reuseView = collectionView.dequeueReusableSupplementaryView(ofKind: kind,
-                                                                        withReuseIdentifier: identifier,
-                                                                        for: indexPath)
+        let reuseView = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: identifier, for: indexPath)
         if let section = self.focusedCollection?.sections?[safe: indexPath.section] {
             self.customDataSouces?.configure(supplement: reuseView, section: section)
         }
@@ -1169,6 +1262,9 @@ extension TLPhotosPickerViewController: UICollectionViewDelegateFlowLayout {
     open func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, referenceSizeForHeaderInSection section: Int) -> CGSize {
         if let sections = self.focusedCollection?.sections?[safe: section], sections.title != "camera" {
             return self.customDataSouces?.headerReferenceSize() ?? CGSize.zero
+        }
+        if((self.isShowManageSetting || self.isShowOpenSetting) && section == 0) {
+            return CGSize(width: UIScreen.main.bounds.width, height: 50)
         }
         return CGSize.zero
     }
@@ -1205,7 +1301,7 @@ extension TLPhotosPickerViewController: UITableViewDelegate, UITableViewDataSour
         cell.subTitleLabel.text = "\(collection.fetchResult?.count ?? 0)"
         if let phAsset = collection.getAsset(at: collection.useCameraButton ? 1 : 0) {
             let scale = UIScreen.main.scale
-            let size = CGSize(width: 80*scale, height: 80*scale)
+            let size = CGSize(width: 80 * scale, height: 80 * scale)
             self.photoLibrary.imageAsset(asset: phAsset, size: size, completionBlock: {  (image,complete) in
                 DispatchQueue.main.async {
                     if let cell = tableView.cellForRow(at: indexPath) as? TLCollectionTableViewCell {

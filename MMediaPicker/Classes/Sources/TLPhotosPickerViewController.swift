@@ -18,6 +18,7 @@ public protocol TLPhotosPickerViewControllerDelegate: class {
     func dismissComplete()
     func photoPickerDidCancel()
     func canSelectAsset(phAsset: PHAsset) -> Bool
+    func canCreateNewAsset(image: UIImage) -> Bool
     func didExceedMaximumNumberOfSelection(picker: TLPhotosPickerViewController)
     func handleNoAlbumPermissions(picker: TLPhotosPickerViewController)
     func handleNoCameraPermissions(picker: TLPhotosPickerViewController)
@@ -31,6 +32,7 @@ extension TLPhotosPickerViewControllerDelegate {
     public func dismissComplete() { }
     public func photoPickerDidCancel() { }
     public func canSelectAsset(phAsset: PHAsset) -> Bool { return true }
+    public func canCreateNewAsset(image: UIImage) -> Bool { return true }
     public func didExceedMaximumNumberOfSelection(picker: TLPhotosPickerViewController) { }
     public func handleNoAlbumPermissions(picker: TLPhotosPickerViewController) { }
     public func handleNoCameraPermissions(picker: TLPhotosPickerViewController) { }
@@ -639,6 +641,10 @@ extension TLPhotosPickerViewController {
         return true
     }
     
+    private func canCreateNewAsset(image: UIImage) -> Bool {
+        return self.delegate?.canCreateNewAsset(image: image) ?? true
+    }
+    
     private func focusFirstCollection() {
         if self.focusedCollection == nil, let collection = self.collections.first {
             self.focusedCollection = collection
@@ -712,6 +718,7 @@ extension TLPhotosPickerViewController: UIImagePickerControllerDelegate, UINavig
         guard mediaTypes.count > 0 else {
             return
         }
+        picker.cameraFlashMode = .off
         picker.mediaTypes = mediaTypes
         picker.allowsEditing = false
         picker.delegate = self
@@ -737,23 +744,28 @@ extension TLPhotosPickerViewController: UIImagePickerControllerDelegate, UINavig
     }
     
     open func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        var isCloseThis: Bool = false
         if let image = (info[.originalImage] as? UIImage) {
-            var placeholderAsset: PHObjectPlaceholder? = nil
-            PHPhotoLibrary.shared().performChanges({
-                let newAssetRequest = PHAssetChangeRequest.creationRequestForAsset(from: image)
-                placeholderAsset = newAssetRequest.placeholderForCreatedAsset
-            }, completionHandler: { [weak self] (success, error) in
-                guard self?.maxCheck() == false else { return }
-                if success, let `self` = self, let identifier = placeholderAsset?.localIdentifier {
-                    guard let asset = PHAsset.fetchAssets(withLocalIdentifiers: [identifier], options: nil).firstObject,
-                        self.canSelect(phAsset: asset) else { return }
-                    var result = TLPHAsset(asset: asset)
-                    result.selectedOrder = self.selectedAssets.count + 1
-                    result.isSelectedFromCamera = true
-                    self.selectedAssets.append(result)
-                    self.logDelegate?.selectedPhoto(picker: self, at: 1)
-                }
-            })
+            if(self.canCreateNewAsset(image: image)) {
+                var placeholderAsset: PHObjectPlaceholder? = nil
+                PHPhotoLibrary.shared().performChanges({
+                    let newAssetRequest = PHAssetChangeRequest.creationRequestForAsset(from: image)
+                    placeholderAsset = newAssetRequest.placeholderForCreatedAsset
+                }, completionHandler: { [weak self] (success, error) in
+                    guard self?.maxCheck() == false else { return }
+                    if success, let `self` = self, let identifier = placeholderAsset?.localIdentifier {
+                        guard let asset = PHAsset.fetchAssets(withLocalIdentifiers: [identifier], options: nil).firstObject,
+                            self.canSelect(phAsset: asset) else { return }
+                        var result = TLPHAsset(asset: asset)
+                        result.selectedOrder = self.selectedAssets.count + 1
+                        result.isSelectedFromCamera = true
+                        self.selectedAssets.append(result)
+                        self.logDelegate?.selectedPhoto(picker: self, at: 1)
+                    }
+                })
+            } else {
+                isCloseThis = true
+            }
         }
         else if (info[.mediaType] as? String) == kUTTypeMovie as String {
             var placeholderAsset: PHObjectPlaceholder? = nil
@@ -773,8 +785,13 @@ extension TLPhotosPickerViewController: UIImagePickerControllerDelegate, UINavig
                 }
             }
         }
-        
-        picker.dismiss(animated: true, completion: nil)
+        if(isCloseThis) {
+            picker.dismiss(animated: true) {[weak self] in
+                self?.dismiss(done: false)
+            }
+        } else {
+            picker.dismiss(animated: true, completion: nil)
+        }
     }
 }
 

@@ -23,10 +23,12 @@ class ViewController: UIViewController {
     
     @IBAction func showPressed() {
         //, selectedColor: UIColor.red
-        MMediaPicker.shared.present(in: self, maxSelectCount: 100, isOnlySelectPhoto: false, languageEng: false) { (arrayAsset) in
+        MMediaPicker.shared.present(in: self, maxSelectCount: 100, isOnlySelectPhoto: true, languageEng: false, usedCameraButton: true) { (arrayAsset) in
             print("Completion")
         } cancel: {
             print("Cancel")
+        } handleTakeImageFromCamera: { (image) in
+            print("\(image)")
         }
 
     }

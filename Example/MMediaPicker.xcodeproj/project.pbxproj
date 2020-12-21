@@ -171,6 +171,7 @@
 				TargetAttributes = {
 					607FACCF1AFB9204008FA782 = {
 						CreatedOnToolsVersion = 6.3.1;
+						DevelopmentTeam = 5VQJKFV338;
 						LastSwiftMigration = 0900;
 					};
 				};
@@ -386,6 +387,7 @@
 			baseConfigurationReference = 7D5F60D1F57DA061B5E824F2 /* Pods-MMediaPicker_Example.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = 5VQJKFV338;
 				INFOPLIST_FILE = MMediaPicker/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
@@ -402,6 +404,7 @@
 			baseConfigurationReference = 9B9C65478CDC31A12F03167E /* Pods-MMediaPicker_Example.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = 5VQJKFV338;
 				INFOPLIST_FILE = MMediaPicker/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";

@@ -7,21 +7,24 @@ import Photos
     
     private var cancel: (() -> Void)? = nil
     
+    private var handleTakeImageFromCamera: ((UIImage) -> Void)? = nil
+    
     @objc public static let shared: MMediaPicker = {
         let instance = MMediaPicker()
         return instance
     }()
     
-    @objc public func presentObjc(in viewController: UIViewController, selectedColor: UIColor, maxSelectCount: Int, isOnlySelectPhoto: Bool, languageEng: Bool, completion: @escaping ([PHAsset]) -> Void, cancel: (() -> Void)?) {
-        self.present(in: viewController, selectedColor: selectedColor, maxSelectCount: maxSelectCount, isOnlySelectPhoto: isOnlySelectPhoto, languageEng: languageEng, completion: completion, cancel: cancel)
+    @objc public func presentObjc(in viewController: UIViewController, selectedColor: UIColor, maxSelectCount: Int, isOnlySelectPhoto: Bool, languageEng: Bool, usedCameraButton: Bool, completion: @escaping ([PHAsset]) -> Void, cancel: (() -> Void)?) {
+        self.present(in: viewController, selectedColor: selectedColor, maxSelectCount: maxSelectCount, isOnlySelectPhoto: isOnlySelectPhoto, languageEng: languageEng, usedCameraButton: usedCameraButton, completion: completion, cancel: cancel)
     }
     
-    public func present(in viewController: UIViewController, selectedColor: UIColor? = nil, maxSelectCount: Int? = nil, isOnlySelectPhoto: Bool? = nil, languageEng: Bool = true, completion: @escaping ([PHAsset]) -> Void, cancel: (() -> Void)? = nil) {
+    public func present(in viewController: UIViewController, selectedColor: UIColor? = nil, maxSelectCount: Int? = nil, isOnlySelectPhoto: Bool? = nil, languageEng: Bool = true, usedCameraButton: Bool = false, completion: @escaping ([PHAsset]) -> Void, cancel: (() -> Void)? = nil, handleTakeImageFromCamera: ((UIImage) -> Void)? = nil) {
         if(languageEng) {
             Bundle.setLanguageFrameworkMMediaPicker("en")
         } else {
             Bundle.setLanguageFrameworkMMediaPicker("vi")
         }
+        self.handleTakeImageFromCamera = handleTakeImageFromCamera
         self.cancel = cancel
         self.completion = completion
         let vc = CustomBlackStylePickerViewController(customColor: selectedColor ?? .black)
@@ -30,16 +33,20 @@ import Photos
             //self?.showExceededMaximumAlert(vc: picker)
         }
         var configure = TLPhotosPickerConfigure()
-        configure.usedCameraButton = false
+        configure.usedCameraButton = usedCameraButton
         configure.numberOfColumn = 4
         configure.maxSelectedAssets = maxSelectCount
+        
+        if(isOnlySelectPhoto == true) {
+            configure.mediaType = .image
+            configure.allowedVideoRecording = false
+        } else {
+            configure.allowedVideoRecording = true
+        }
         vc.configure = configure
         vc.selectedAssets = []
         //vc.logDelegate = self
         
-        if(isOnlySelectPhoto == true) {
-            configure.mediaType = .image
-        }
         vc.modalPresentationStyle = .fullScreen
         viewController.present(vc, animated: true, completion: nil)
         
@@ -74,6 +81,12 @@ import Photos
     }
     public func canSelectAsset(phAsset: PHAsset) -> Bool {
         return true
+    }
+    
+    public func canCreateNewAsset(image: UIImage) -> Bool {
+        self.handleTakeImageFromCamera?(image)
+        self.handleTakeImageFromCamera = nil
+        return false
     }
     public func didExceedMaximumNumberOfSelection(picker: TLPhotosPickerViewController) {
         

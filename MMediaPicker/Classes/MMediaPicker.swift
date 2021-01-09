@@ -1,6 +1,13 @@
 
 import Photos
 
+public enum MediaPickerType: Int {
+    case all = 0
+    case video = 1
+    case photo = 2
+    
+}
+
 @objc public class MMediaPicker: NSObject, TLPhotosPickerViewControllerDelegate {
     
     private var completion: (([PHAsset]) -> Void)? = nil
@@ -42,6 +49,41 @@ import Photos
             configure.allowedVideoRecording = false
         } else {
             configure.allowedVideoRecording = true
+        }
+        vc.configure = configure
+        vc.selectedAssets = []
+        //vc.logDelegate = self
+        
+        vc.modalPresentationStyle = .fullScreen
+        viewController.present(vc, animated: true, completion: nil)
+        
+    }
+    
+    public func present(in viewController: UIViewController, selectedColor: UIColor? = nil, maxSelectCount: Int? = nil, mediaPickerType: MediaPickerType = .all, allowedVideoRecording: Bool, languageEng: Bool = true, usedCameraButton: Bool = false, completion: @escaping ([PHAsset]) -> Void, cancel: (() -> Void)? = nil, handleTakeImageFromCamera: ((UIImage) -> Void)? = nil) {
+        if(languageEng) {
+            Bundle.setLanguageFrameworkMMediaPicker("en")
+        } else {
+            Bundle.setLanguageFrameworkMMediaPicker("vi")
+        }
+        self.handleTakeImageFromCamera = handleTakeImageFromCamera
+        self.cancel = cancel
+        self.completion = completion
+        let vc = CustomBlackStylePickerViewController(customColor: selectedColor ?? .black)
+        vc.delegate = self
+        vc.didExceedMaximumNumberOfSelection = { [weak self] (picker) in
+            //self?.showExceededMaximumAlert(vc: picker)
+        }
+        var configure = TLPhotosPickerConfigure()
+        configure.usedCameraButton = usedCameraButton
+        configure.numberOfColumn = 4
+        configure.maxSelectedAssets = maxSelectCount
+        
+        if(mediaPickerType == .photo) {
+            configure.mediaType = .image
+            configure.allowedVideoRecording = false
+        } else if(mediaPickerType == .video) {
+            configure.mediaType = .video
+            configure.allowedVideoRecording = allowedVideoRecording
         }
         vc.configure = configure
         vc.selectedAssets = []
